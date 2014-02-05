@@ -16,6 +16,12 @@ Or install it yourself as:
 
     $ gem install model
 
+## Tests
+
+Run the tests:
+
+    rake test
+
 ## Usage
 
 TODO: Write usage instructions here

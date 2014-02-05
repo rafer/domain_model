@@ -1,5 +1,5 @@
-require "model/version"
-
 module Model
-  # Your code goes here...
 end
+
+require "model/version"
+require "model/model"
