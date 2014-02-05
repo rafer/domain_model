@@ -26,6 +26,41 @@ describe Model do
       expect(&required_collection).to raise_error(ArgumentError, /fields cannot be both required a collection and required/ )
     end
   end
+  
+  describe ".validate" do
+    it "runs added validations each time #errors is called" do
+      run_count = 0
+
+      define do
+        validate { run_count += 1 }
+      end
+      
+      client = Client.new
+      
+      expect { client.errors }.to change { run_count }.to(1)
+      expect { client.errors }.to change { run_count }.to(2)
+    end
+    
+    it "is passed the errors object" do
+      define do
+        validate { |e| e.add(:field, "ERROR") }
+      end
+      
+      client = Client.new
+      expect(client.errors[:field] ).to include("ERROR")
+    end
+    
+    it "is executed after the built in field validations" do
+      define do
+        field :field, :required => true
+        validate { |e| e.add(:field, "There were #{e[:field].size} errors") }
+      end
+      
+      client = Client.new
+      
+      expect(client.errors[:field]).to include("There were 1 errors")
+    end
+  end
 
   describe ".new" do
     before { define { field :name } }
@@ -41,6 +76,11 @@ describe Model do
   end
 
   describe ".errors" do
+    it "is no fields or validations have been defined" do
+      define { }
+      expect(Client.new.errors).to be_empty
+    end
+    
     it "includes errors for incorrect types" do
       define { field :field, :type => String }
       client = Client.new(:field => :wrong)

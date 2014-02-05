@@ -12,25 +12,34 @@ module Model
   end
 
   def errors
-    errors = Hash.new { [] }
+    errors = Errors.new
 
     self.class.fields.each do |field|
-      errors[field.name] = field.errors(self.send(field.name))
+      errors.add(field.name, field.errors(self.send(field.name)))
     end
+
+    self.class.validations.each { |v| instance_exec(errors, &v) }
 
     errors
   end
 
   module ClassMethods
+    def validate(&block)
+      @validations ||= []
+      validations << block
+    end
+    
     def field(*args)
-      @fields ||= []
-      field = Field.new(*args)
+      fields << (field = Field.new(*args))
       attr_accessor(field.name)
-      fields << field
     end
     
     def fields
-      @fields
+      @fields ||= []
+    end
+    
+    def validations
+      @validations ||= []
     end
   end
 
@@ -59,6 +68,25 @@ module Model
     def collection?
       !!@collection
     end      
+  end
+
+  class Errors
+    def initialize
+      @hash = Hash.new
+    end
+    
+    def add(field_name, error)
+      @hash[field_name] ||= []
+      @hash[field_name] += Array(error)
+    end
+    
+    def [](field_name)
+      @hash[field_name] || []
+    end
+    
+    def empty?
+      @hash.values.flatten.empty?
+    end
   end
 
   class Validator
