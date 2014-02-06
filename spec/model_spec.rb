@@ -250,6 +250,18 @@ describe Model do
       expect(client.inspect).to match(/field: "FIELD"/)
     end
   end
+  
+  describe "#valid?" do
+    it "is true if there are no errors" do
+      define { field :field }
+      expect(Client.new.valid?).to be(true)
+    end
+
+    it "is false if there are errors" do
+      define { field :field, :required => true }
+      expect(Client.new.valid?).to be(false)
+    end
+  end
 
   def define(&block)
     client = Class.new do

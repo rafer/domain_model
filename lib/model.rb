@@ -22,6 +22,10 @@ module Model
 
     errors
   end
+  
+  def valid?
+    errors.empty?
+  end
 
   def ==(other)
     self.class.fields.map(&:name).all? do |name|
