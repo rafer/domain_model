@@ -23,6 +23,16 @@ module Model
     errors
   end
 
+  def ==(other)
+    self.class.fields.map(&:name).all? do |name|
+      self.send(name) == other.send(name)
+    end
+  end
+
+  def inspect
+    "#<#{self.class.name} " + self.class.fields.map { |f| "#{f.name}: #{send(f.name).inspect}" }.join(", ") + ">"
+  end
+
   module ClassMethods
     def validate(&block)
       @validations ||= []

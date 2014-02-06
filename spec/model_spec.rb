@@ -165,6 +165,33 @@ describe Model do
       expect(client.errors[:field]).to be_empty
     end
   end
+  
+  describe "#==" do
+    before { define { field :field } }
+
+    it "is true if all fields are equal" do
+      client_1 = Client.new(:field => "A")
+      client_2 = Client.new(:field => "A")
+
+      expect(client_1).to eq(client_2)
+    end
+
+    it "is false if any field is different" do
+      client_1 = Client.new(:field => "A")
+      client_2 = Client.new(:field => "B")
+
+      expect(client_1).not_to eq(client_2)
+    end
+  end
+  
+  describe "#inspect" do
+    before { define { field :field } }
+
+    it "shows the name and value of all fields" do
+      client = Client.new(:field => "FIELD")
+      expect(client.inspect).to match(/field: "FIELD"/)
+    end
+  end
 
   def define(&block)
     client = Class.new do
