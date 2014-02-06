@@ -60,6 +60,7 @@ module Model
       @name       = name
       @required   = options.fetch(:required, false)
       @collection = options.fetch(:collection, false)
+      @validate   = options.fetch(:validate, false)
 
       raw_type = options.fetch(:type, BasicObject)
       @types   = raw_type.is_a?(Module) ? [raw_type] : raw_type
@@ -79,6 +80,10 @@ module Model
 
     def collection?
       !!@collection
+    end
+    
+    def validate?
+      !!@validate
     end
   end
 
@@ -127,6 +132,8 @@ module Model
           ["was declared as a collection and is not enumerable"]
         when type_mismatch?
           ["contains a value that is not an instance of #{types.map(&:inspect).join(' or ')}"]
+        when transitively_invalid?
+          ["is invalid"]
         else
           []
         end
@@ -145,6 +152,10 @@ module Model
           field.types.none? { |t| value.is_a?(t) }
         end
       end
+      
+      def transitively_invalid?
+        field.validate? and values.any? { |v| not v.valid? }
+      end
     end
 
     class Scalar < Validator
@@ -154,10 +165,14 @@ module Model
 
       def errors
         case
+        when legitimately_empty?
+          []
         when (value.nil? and field.required?)
-          ["cannot be empty"]
-        when (type_mismatch? and not legitimately_empty?)
+          ["cannot be nil"]
+        when type_mismatch? 
           ["is not an instance of #{type_string} (was #{value.class.inspect})"]
+        when transitively_invalid?
+          ["is invalid"]
         else
           []
         end
@@ -169,7 +184,7 @@ module Model
 
       def type_mismatch?
         types.none? { |t| value.is_a?(t) }
-      end
+        end
 
       def type_string
         types.map(&:inspect).join(' or ')
@@ -177,6 +192,10 @@ module Model
 
       def legitimately_empty?
         value.nil? and not field.required?
+      end
+      
+      def transitively_invalid?
+        field.validate? and not value.valid?
       end
     end
   end
