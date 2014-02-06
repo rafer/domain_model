@@ -7,7 +7,7 @@ module Model
     self.class.fields.select(&:collection?).each do |field|
       params[field.name] ||= []
     end
-    
+
     params.each { |k,v | send("#{k}=", v) }
   end
 
@@ -38,16 +38,16 @@ module Model
       @validations ||= []
       validations << block
     end
-    
+
     def field(*args)
       fields << (field = Field.new(*args))
       attr_accessor(field.name)
     end
-    
+
     def fields
       @fields ||= []
     end
-    
+
     def validations
       @validations ||= []
     end
@@ -58,12 +58,14 @@ module Model
 
     def initialize(name, options = {})
       @name       = name
-      @types      = Array(options.fetch(:type, BasicObject))
       @required   = options.fetch(:required, false)
       @collection = options.fetch(:collection, false)
-      
+
+      raw_type = options.fetch(:type, BasicObject)
+      @types   = raw_type.is_a?(Module) ? [raw_type] : raw_type
+
       if required? and collection?
-        raise ArgumentError, "fields cannot be both required a collection and required" 
+        raise ArgumentError, "fields cannot be both :collection and :required"
       end
     end
 
@@ -77,23 +79,24 @@ module Model
 
     def collection?
       !!@collection
-    end      
+    end
   end
 
   class Errors
     def initialize
       @hash = Hash.new
     end
-    
+
     def add(field_name, error)
       @hash[field_name] ||= []
       @hash[field_name] += Array(error)
     end
-    
+
     def [](field_name)
       @hash[field_name] || []
+
     end
-    
+
     def empty?
       @hash.values.flatten.empty?
     end
@@ -106,13 +109,13 @@ module Model
     end
 
     private
-    
+
     attr_reader :field
-    
+
     def types
       field.types
     end
-    
+
     class Collection < Validator
       def initialize(field, values)
         @field, @values = field, values
@@ -136,14 +139,14 @@ module Model
       def enumerable?
         values.is_a?(Enumerable)
       end
-    
+
       def type_mismatch?
         values.all? do |value|
           field.types.none? { |t| value.is_a?(t) }
         end
       end
     end
-  
+
     class Scalar < Validator
       def initialize(field, value)
         @field, @value = field, value
@@ -153,23 +156,27 @@ module Model
         case
         when (value.nil? and field.required?)
           ["cannot be empty"]
-        when type_mismatch?
+        when (type_mismatch? and not legitimately_empty?)
           ["is not an instance of #{type_string} (was #{value.class.inspect})"]
         else
           []
         end
       end
-    
-      private 
-    
+
+      private
+
       attr_reader :value
-                
+
       def type_mismatch?
-        types.none? { |t| value.is_a?(t) } 
+        types.none? { |t| value.is_a?(t) }
       end
-      
+
       def type_string
         types.map(&:inspect).join(' or ')
+      end
+
+      def legitimately_empty?
+        value.nil? and not field.required?
       end
     end
   end

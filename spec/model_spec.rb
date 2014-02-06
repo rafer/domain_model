@@ -23,7 +23,7 @@ describe Model do
          define { field :name, :collection => true, :required => true }
        end
        
-      expect(&required_collection).to raise_error(ArgumentError, /fields cannot be both required a collection and required/ )
+      expect(&required_collection).to raise_error(ArgumentError, /fields cannot be both :collection and :required/ )
     end
   end
   
@@ -76,7 +76,7 @@ describe Model do
   end
 
   describe ".errors" do
-    it "is no fields or validations have been defined" do
+    it "is empty when no fields or validations have been defined" do
       define { }
       expect(Client.new.errors).to be_empty
     end
@@ -100,6 +100,12 @@ describe Model do
       client = Client.new(:field => "right")
 
       expect(client.errors[:field]).to be_empty
+    end
+    
+    it "includes no errors for non-required, typed fields" do
+      define { field :field, :type => String }
+      
+      expect(Client.new.errors[:field]).to be_empty
     end
 
     it "includes errors for incorrect types (when multiple are specified)" do
