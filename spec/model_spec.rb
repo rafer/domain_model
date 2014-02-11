@@ -128,28 +128,28 @@ describe Model do
       expect(Client.new(:field => "right").errors[:field]).to eq([])
       expect(Client.new(:field => :right).errors[:field]).to eq([])
     end
-    
+
     it "includes only the 'empty' error for fields that are required and typed, with a nil value" do
       define { field :field, :type => String, :required => true }
       client = Client.new(:field => nil)
 
       expect(client.errors[:field]).to include("cannot be nil")
     end
-    
+
     it "includes errors for invalid collaborators (when :validate is specified)" do
       define { field :field, :validate => true }
       client = Client.new(:field => double(:valid? => false))
-      
+
       expect(client.errors[:field]).to include("is invalid")
     end
 
     it "doesn't includes errors for valid collaborators (when :validate is specified)" do
       define { field :field, :validate => true }
       client = Client.new(:field => double(:valid? => true))
-      
+
       expect(client.errors[:field]).to eq([])
     end
-    
+
     it "doesn't validate collaborators if the type is incorrect" do
       define { field :field, :type => String, :validate => true }
 
@@ -157,7 +157,7 @@ describe Model do
       client       = Client.new(:field => collaborator)
 
       expect(collaborator).not_to receive(:valid?)
-      
+
       client.errors
     end
 
@@ -167,6 +167,13 @@ describe Model do
         client = Client.new(:field => 1)
 
         expect(client.errors[:field]).to include("was declared as a collection and is not enumerable")
+      end
+
+      it "doesn't include errors if there are no values" do
+        define { field :field, :type => String, :collection => true }
+        client = Client.new
+
+        expect(client.errors[:field]).to eq([])
       end
 
       it "includes errors for incorrect types" do
@@ -196,21 +203,21 @@ describe Model do
 
         expect(client.errors[:field]).to eq([])
       end
-      
+
       it "includes errors for invalid collaborators (when :validate is specified)" do
         define { field :field, :validate => true, :collection => true }
         client = Client.new(:field => [double(:valid? => false)])
-      
+
         expect(client.errors[:field]).to include("is invalid")
       end
 
       it "doesn't include errors for valid collaborators (when :validate is specified)" do
         define { field :field, :validate => true, :collection => true }
         client = Client.new(:field => [double(:valid? => true)])
-      
+
         expect(client.errors[:field]).to eq([])
       end
-      
+
       it "doesn't validate collaborators if the type is incorrect" do
         define { field :field, :type => String, :validate => true, :collection => true }
 
@@ -218,7 +225,7 @@ describe Model do
         client       = Client.new(:field => [collaborator])
 
         expect(collaborator).not_to receive(:valid?)
-      
+
         client.errors
       end
     end
@@ -240,17 +247,21 @@ describe Model do
 
       expect(client_1).not_to eq(client_2)
     end
+
+    it "is false if the object is of another type" do
+      expect(Client.new).not_to eq(double)
+    end
   end
 
   describe "#inspect" do
     before { define { field :field } }
 
     it "shows the name and value of all fields" do
-      client = Client.new(:field => "FIELD")
-      expect(client.inspect).to match(/field: "FIELD"/)
+      client = Client.new(:field => "VALUE")
+      expect(client.inspect).to match(/field: "VALUE"/)
     end
   end
-  
+
   describe "#valid?" do
     it "is true if there are no errors" do
       define { field :field }
@@ -260,6 +271,15 @@ describe Model do
     it "is false if there are errors" do
       define { field :field, :required => true }
       expect(Client.new.valid?).to be(false)
+    end
+  end
+
+  describe "#attributes" do
+    it "returns the models as a hash" do
+      define { field :field }
+      client = Client.new(:field => "VALUE")
+
+      expect(client.attributes).to eq({:field => "VALUE"})
     end
   end
 

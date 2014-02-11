@@ -22,19 +22,25 @@ module Model
 
     errors
   end
-  
+
   def valid?
     errors.empty?
   end
 
   def ==(other)
-    self.class.fields.map(&:name).all? do |name|
-      self.send(name) == other.send(name)
-    end
+    other.is_a?(self.class) && attributes == other.attributes
   end
 
   def inspect
-    "#<#{self.class.name} " + self.class.fields.map { |f| "#{f.name}: #{send(f.name).inspect}" }.join(", ") + ">"
+    "#<#{self.class} " + attributes.map { |n, v| "#{n}: #{v.inspect}" }.join(", ") + ">"
+  end
+
+  def attributes
+    attributes = {}
+    self.class.fields.map(&:name).each do |name|
+      attributes[name] = send(name)
+    end
+    attributes
   end
 
   module ClassMethods
@@ -85,7 +91,7 @@ module Model
     def collection?
       !!@collection
     end
-    
+
     def validate?
       !!@validate
     end
@@ -152,11 +158,11 @@ module Model
       end
 
       def type_mismatch?
-        values.all? do |value|
+        values.any? do |value|
           field.types.none? { |t| value.is_a?(t) }
         end
       end
-      
+
       def transitively_invalid?
         field.validate? and values.any? { |v| not v.valid? }
       end
@@ -173,7 +179,7 @@ module Model
           []
         when (value.nil? and field.required?)
           ["cannot be nil"]
-        when type_mismatch? 
+        when type_mismatch?
           ["is not an instance of #{type_string} (was #{value.class.inspect})"]
         when transitively_invalid?
           ["is invalid"]
@@ -197,7 +203,7 @@ module Model
       def legitimately_empty?
         value.nil? and not field.required?
       end
-      
+
       def transitively_invalid?
         field.validate? and not value.valid?
       end
