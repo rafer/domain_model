@@ -41,24 +41,88 @@ describe Model do
       expect { client.errors }.to change { run_count }.to(2)
     end
 
-    it "is passed the errors object" do
-      define do
-        validate { |e| e.add(:field, "ERROR") }
+    describe "with no field name" do
+      it "is passed the errors object" do
+        define do
+          validate { |e| e.add(:field, "ERROR") }
+        end
+
+        client = Client.new
+        expect(client.errors[:field] ).to include("ERROR")
       end
 
-      client = Client.new
-      expect(client.errors[:field] ).to include("ERROR")
+      it "is executed after the built in field validations" do
+        define do
+          field :field, :required => true
+          validate { |e| e.add(:field, "There were #{e[:field].size} errors") }
+        end
+
+        client = Client.new
+        expect(client.errors[:field]).to include("There were 1 errors")
+      end
+
+      it "is not executed if :clean => true and there are errors" do
+        define do
+          field :field, :required => true
+          validate(:clean => true) { |e| e.add(:field, "never happen") }
+        end
+
+        client = Client.new
+        expect(client.errors[:field]).to eq(["cannot be nil"])
+      end
+
+      it "is executed if :clean => true and there are not errors" do
+        define do
+          field :field
+          validate(:clean => true) { |e| e.add(:field, "should happen") }
+        end
+
+        client = Client.new
+        expect(client.errors[:field]).to eq(["should happen"])
+      end
     end
 
-    it "is executed after the built in field validations" do
-      define do
-        field :field, :required => true
-        validate { |e| e.add(:field, "There were #{e[:field].size} errors") }
+    describe "with a field name" do
+      it "is passed an errors object for that field" do
+        define do
+          field :field
+          validate(:field) { |e| e.add("is not great")}
+        end
+
+        client = Client.new
+        expect(client.errors[:field]).to include("is not great")
       end
 
-      client = Client.new
+      it "is not executed if :clean => true and there are errors on the specified field" do
+        define do
+          field :field, :required => true
+          validate(:field, :clean => true) { |e| e.add("never happen") }
+        end
 
-      expect(client.errors[:field]).to include("There were 1 errors")
+        client = Client.new
+        expect(client.errors[:field]).to eq(["cannot be nil"])
+      end
+
+      it "is executed if :clean => true and there are errors on *other* fields" do
+        define do
+          field :field
+          field :other, :required => true
+          validate(:field, :clean => true) { |e| e.add("should happen") }
+        end
+
+        client = Client.new
+        expect(client.errors[:field]).to eq(["should happen"])
+      end
+
+      it "is executed if clean => true and there are not errors on the specified field" do
+        define do
+          field :field
+          validate(:field, :clean => true) { |e| e.add("should happen") }
+        end
+
+        client = Client.new
+        expect(client.errors[:field]).to eq(["should happen"])
+      end
     end
   end
 

@@ -12,13 +12,13 @@ module Model
   end
 
   def errors
-    errors = Errors.new
+    errors = ModelErrors.new
 
     self.class.fields.each do |field|
       errors.add(field.name, field.errors(self.send(field.name)))
     end
 
-    self.class.validations.each { |v| instance_exec(errors, &v) }
+    self.class.validations.each { |v| v.execute(self, errors) }
 
     errors
   end
@@ -44,9 +44,9 @@ module Model
   end
 
   module ClassMethods
-    def validate(&block)
+    def validate(*args, &block)
       @validations ||= []
-      validations << block
+      validations << Validation.new(*args, &block)
     end
 
     def field(*args)
@@ -97,7 +97,7 @@ module Model
     end
   end
 
-  class Errors
+  class ModelErrors
     def initialize
       @hash = Hash.new
     end
@@ -114,6 +114,56 @@ module Model
 
     def empty?
       @hash.values.flatten.empty?
+    end
+  end
+
+  class FieldErrors
+    def initialize(model_errors, field)
+      @model_errors, @field = model_errors, field
+    end
+
+    def add(error)
+      @model_errors.add(@field.name, error)
+    end
+
+    def empty?
+      @model_errors[@field.name].empty?
+    end
+  end
+
+  class Validation
+    def initialize(*args, &block)
+      @field_name = args[0] if args[0].is_a?(Symbol)
+      @options    = args[0] if args[0].is_a?(Hash)
+      @options    = args[1] if args[1].is_a?(Hash)
+      @options    = {} if @options.nil?
+
+      @block      = block
+    end
+
+    def execute(model, errors)
+      if global?
+        if not clean? or errors.empty?
+          model.instance_exec(errors, &@block)
+        end
+      else
+        field = model.class.fields.find { |f| f.name == @field_name}
+        raise("No field called #{@field_name}") if field.nil?
+
+        field_errors = FieldErrors.new(errors, field)
+
+        if not clean? or field_errors.empty?
+          model.instance_exec(field_errors, &@block)
+        end
+      end
+    end
+
+    def global?
+      @field_name.nil?
+    end
+
+    def clean?
+      @options.fetch(:clean, false)
     end
   end
 
