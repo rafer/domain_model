@@ -61,27 +61,37 @@ describe Model do
         expect(client.errors[:field]).to include("There were 1 errors")
       end
 
-      it "is not executed if :clean => true and there are errors" do
+      it "is not executed if there are any errors on the model with :always => false" do
         define do
           field :field, :required => true
-          validate(:clean => true) { |e| e.add(:field, "never happen") }
+          validate(:always => false) { |e| e.add(:field, "never happen") }
         end
 
         client = Client.new
         expect(client.errors[:field]).to eq(["cannot be nil"])
       end
 
-      it "is executed if :clean => true and there are not errors" do
+      it "is executed irrespetive of other errors with :always => true" do
         define do
-          field :field
-          validate(:clean => true) { |e| e.add(:field, "should happen") }
+          field :field, :required => true
+          validate(:always => true) { |e| e.add(:field, "should happen") }
         end
 
         client = Client.new
-        expect(client.errors[:field]).to eq(["should happen"])
+        expect(client.errors[:field]).to eq(["cannot be nil", "should happen"])
+      end
+      
+      it "defaults :always to true" do
+        define do
+          field :field, :required => true
+          validate { |e| e.add(:field, "should happen") }
+        end
+
+        client = Client.new
+        expect(client.errors[:field]).to eq(["cannot be nil", "should happen"])
       end
     end
-
+    
     describe "with a field name" do
       it "is passed an errors object for that field" do
         define do
@@ -93,35 +103,34 @@ describe Model do
         expect(client.errors[:field]).to include("is not great")
       end
 
-      it "is not executed if :clean => true and there are errors on the specified field" do
+      it "is not executed if there are already errors on the specified field with :always => false" do
         define do
           field :field, :required => true
-          validate(:field, :clean => true) { |e| e.add("never happen") }
+          validate(:field, :always => false) { |e| e.add("never happen") }
         end
 
         client = Client.new
         expect(client.errors[:field]).to eq(["cannot be nil"])
       end
 
-      it "is executed if :clean => true and there are errors on *other* fields" do
+      it "is executed irrespective of field errors with :always => true" do
         define do
-          field :field
-          field :other, :required => true
-          validate(:field, :clean => true) { |e| e.add("should happen") }
+          field :field, :required => true
+          validate(:field, :always => true) { |e| e.add("should happen") }
         end
 
         client = Client.new
-        expect(client.errors[:field]).to eq(["should happen"])
+        expect(client.errors[:field]).to eq(["cannot be nil", "should happen"])
       end
 
-      it "is executed if clean => true and there are not errors on the specified field" do
+      it "defaults :always to false" do
         define do
-          field :field
-          validate(:field, :clean => true) { |e| e.add("should happen") }
+          field :field, :required => true
+          validate(:field) { |e| e.add("never happen") }
         end
 
         client = Client.new
-        expect(client.errors[:field]).to eq(["should happen"])
+        expect(client.errors[:field]).to eq(["cannot be nil"])
       end
     end
   end

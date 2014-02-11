@@ -143,7 +143,7 @@ module Model
 
     def execute(model, errors)
       if global?
-        if not clean? or errors.empty?
+        if always? or errors.empty?
           model.instance_exec(errors, &@block)
         end
       else
@@ -152,7 +152,7 @@ module Model
 
         field_errors = FieldErrors.new(errors, field)
 
-        if not clean? or field_errors.empty?
+        if always? or field_errors.empty?
           model.instance_exec(field_errors, &@block)
         end
       end
@@ -162,8 +162,8 @@ module Model
       @field_name.nil?
     end
 
-    def clean?
-      @options.fetch(:clean, false)
+    def always?
+      @options.fetch(:always, global?)
     end
   end
 
