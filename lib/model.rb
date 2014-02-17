@@ -103,9 +103,7 @@ module Model
 
           next unless field
 
-          unless field.monotype
-            raise "Can't deserialize multi-type fields (#{type}##{field.name} in particular)"
-          end
+          next unless field.monotype
 
           if field.collection?
             primitive[k] = v.map { |e| deserialize(field.monotype, e) }
