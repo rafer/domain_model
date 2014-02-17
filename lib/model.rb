@@ -44,7 +44,7 @@ module Model
   end
 
   def to_primitive
-    PrimitiveSerializer.serialize(self)
+    Serializer.serialize(self)
   end
 
   module ClassMethods
@@ -87,26 +87,23 @@ module Model
     end
   end
 
+
   class Serializer
-    def initialize(&policy)
-      @policy = policy
+    def self.serialize(object)
+      new.serialize(object)
     end
 
     def serialize(object)
-      instance_exec(object, &@policy)
-    end
-  end
-  
-  PrimitiveSerializer = Serializer.new do |object|
-    case object
-    when Model
-      serialize(object.attributes)
-    when Hash
-      object.each {|k,v| object[k] = serialize(v) }
-    when Array
-      object.map { |o| serialize(o) }
-    else
-      object
+      case object
+      when Model
+        serialize(object.attributes)
+      when Hash
+        object.each {|k,v| object[k] = serialize(v) }
+      when Array
+        object.map { |o| serialize(o) }
+      else
+        object
+      end
     end
   end
 
