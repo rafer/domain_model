@@ -67,26 +67,9 @@ module Model
     end
 
     def from_primitive(primitive)
-      attributes = {}
-
-      primitive.each do |key, value|
-        field = fields.find {|f| f.name == key }
-        type  = field && field.monotype
-
-        attributes[key] = case
-        when type && type.respond_to?(:from_primitive) && field.collection? && value.is_a?(Enumerable)
-          value.map { |v| type.from_primitive(v) }
-        when type && type.respond_to?(:from_primitive)
-          type.from_primitive(value)
-        else
-          value
-        end
-      end
-
-      new(attributes)
+      Deserializer.deserialize(primitive, self)
     end
   end
-
 
   class Serializer
     def self.serialize(object)
@@ -106,7 +89,33 @@ module Model
       end
     end
   end
+  
+  class Deserializer
+    def self.deserialize(primitive, type)
+      new.deserialize(primitive, type)
+    end
+  
+    def deserialize(primitive, type)
+      case
+      when type <= Model
+        primitive.each do |k, v|
+          field = type.fields.find { |f| f.name == k } 
 
+          next unless field.monotype
+
+          if field.collection?
+            primitive[k] = v.map { |e| deserialize(e, field.monotype) }
+          else
+            primitive[k] = deserialize(v, field.monotype)
+          end
+        end
+
+        type.new(primitive)
+      else 
+        primitive
+      end
+    end
+  end
 
   class Field
     attr_reader :name, :types
