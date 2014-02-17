@@ -3,12 +3,12 @@ module Model
     base.extend(ClassMethods)
   end
 
-  def initialize(params={})
+  def initialize(attributes={})
     self.class.fields.select(&:collection?).each do |field|
-      params[field.name] ||= []
+      attributes[field.name] ||= []
     end
 
-    params.each { |k,v | send("#{k}=", v) }
+    attributes.each { |k,v | send("#{k}=", v) }
   end
 
   def errors
@@ -43,6 +43,10 @@ module Model
     attributes
   end
 
+  def to_primitive
+    PrimitiveSerializer.serialize(self)
+  end
+
   module ClassMethods
     def validate(*args, &block)
       @validations ||= []
@@ -61,7 +65,51 @@ module Model
     def validations
       @validations ||= []
     end
+
+    def from_primitive(primitive)
+      attributes = {}
+
+      primitive.each do |key, value|
+        field = fields.find {|f| f.name == key }
+        type  = field && field.monotype
+
+        attributes[key] = case
+        when type && type.respond_to?(:from_primitive) && field.collection? && value.is_a?(Enumerable)
+          value.map { |v| type.from_primitive(v) }
+        when type && type.respond_to?(:from_primitive)
+          type.from_primitive(value)
+        else
+          value
+        end
+      end
+
+      new(attributes)
+    end
   end
+
+  class Serializer
+    def initialize(&policy)
+      @policy = policy
+    end
+
+    def serialize(object)
+      instance_exec(object, &@policy)
+    end
+  end
+  
+  PrimitiveSerializer = Serializer.new do |object|
+    case object
+    when Model
+      serialize(object.attributes)
+    when Hash
+      object.each {|k,v| object[k] = serialize(v) }
+    when Array
+      object.map { |o| serialize(o) }
+    else
+      object
+    end
+  end
+
 
   class Field
     attr_reader :name, :types
@@ -82,6 +130,10 @@ module Model
 
     def errors(value)
       Validator.errors(self, value)
+    end
+
+    def monotype
+      types.first if types.count == 1
     end
 
     def required?

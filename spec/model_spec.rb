@@ -80,7 +80,7 @@ describe Model do
         client = Client.new
         expect(client.errors[:field]).to eq(["cannot be nil", "should happen"])
       end
-      
+
       it "defaults :always to true" do
         define do
           field :field, :required => true
@@ -91,7 +91,7 @@ describe Model do
         expect(client.errors[:field]).to eq(["cannot be nil", "should happen"])
       end
     end
-    
+
     describe "with a field name" do
       it "is passed an errors object for that field" do
         define do
@@ -353,6 +353,68 @@ describe Model do
       client = Client.new(:field => "VALUE")
 
       expect(client.attributes).to eq({:field => "VALUE"})
+    end
+  end
+
+  describe "#to_primitive" do
+    class Child
+      include Model
+      field :field
+    end
+
+    it "returns a hash of the field's attribtues" do
+      define { field :field }
+      client = Client.new(:field => "VALUE")
+
+      expect(client.to_primitive).to eq({:field => "VALUE"})
+    end
+
+    it "converts referenced models" do
+      define do
+        field :child, :type => Child
+      end
+      client = Client.new(:child => Child.new(:field => "VALUE"))
+
+      expect(client.to_primitive).to eq(:child => {:field => "VALUE"})
+    end
+
+    it "converts collection models" do
+      define { field :children, :collection => true }
+      client = Client.new(:children => [Child.new(:field => "VALUE")])
+
+      expect(client.to_primitive).to eq(:children => [ :field => "VALUE" ])
+    end
+  end
+
+  describe ".from_primitive" do
+    class Child
+      include Model
+      field :field
+    end
+
+    it "parses simple fields " do
+      define { field :field }
+
+      client = Client.from_primitive({:field => "VALUE"})
+      expect(client.field).to eq("VALUE")
+    end
+
+    it "parses referenced Models" do
+      define { field :child, :type => Child }
+
+      client = Client.from_primitive(:child => {:field => "VALUE"})
+      child  = client.child
+
+      expect(child).to eq(Child.new(:field => "VALUE"))
+    end
+
+    it "parses collection Models" do
+      define { field :children, :type => Child, :collection => true }
+
+      client   = Client.from_primitive(:children => [{:field => "VALUE"}] )
+      children = client.children
+
+      expect(children).to eq([Child.new(:field => "VALUE")])
     end
   end
 
