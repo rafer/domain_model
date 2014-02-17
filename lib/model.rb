@@ -101,7 +101,9 @@ module Model
         primitive.each do |k, v|
           field = type.fields.find { |f| f.name == k } 
 
-          next unless field.monotype
+          unless field.monotype
+            raise "Can't deserialize multi-type fields"
+          end
 
           if field.collection?
             primitive[k] = v.map { |e| deserialize(e, field.monotype) }
