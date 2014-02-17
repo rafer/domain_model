@@ -67,7 +67,7 @@ module Model
     end
 
     def from_primitive(primitive)
-      Deserializer.deserialize(primitive, self)
+      Deserializer.deserialize(self, primitive)
     end
   end
 
@@ -91,24 +91,26 @@ module Model
   end
   
   class Deserializer
-    def self.deserialize(primitive, type)
-      new.deserialize(primitive, type)
+    def self.deserialize(type, primitive)
+      new.deserialize(type, primitive)
     end
   
-    def deserialize(primitive, type)
+    def deserialize(type, primitive)
       case
       when type <= Model
         primitive.each do |k, v|
           field = type.fields.find { |f| f.name == k } 
 
+          next unless field
+
           unless field.monotype
-            raise "Can't deserialize multi-type fields"
+            raise "Can't deserialize multi-type fields (#{type}##{field.name} in particular)"
           end
 
           if field.collection?
-            primitive[k] = v.map { |e| deserialize(e, field.monotype) }
+            primitive[k] = v.map { |e| deserialize(field.monotype, e) }
           else
-            primitive[k] = deserialize(v, field.monotype)
+            primitive[k] = deserialize(field.monotype, v)
           end
         end
 
