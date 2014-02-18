@@ -1,6 +1,6 @@
 require "spec_helper"
 
-describe Model do
+describe DomainModel do
   describe ".field" do
     it "creates a getter and setter for the field" do
       define { field :name }
@@ -383,7 +383,7 @@ describe Model do
 
   describe "#to_primitive" do
     class Child
-      include Model
+      include DomainModel
       field :field
     end
 
@@ -413,7 +413,7 @@ describe Model do
 
   describe ".from_primitive" do
     class Child
-      include Model
+      include DomainModel
       field :field
     end
 
@@ -424,7 +424,7 @@ describe Model do
       expect(client.field).to eq("VALUE")
     end
 
-    it "parses referenced Models" do
+    it "parses referenced DomainModels" do
       define { field :child, :type => Child }
 
       client = Client.from_primitive(:child => {:field => "VALUE"})
@@ -433,7 +433,7 @@ describe Model do
       expect(child).to eq(Child.new(:field => "VALUE"))
     end
 
-    it "parses collection Models" do
+    it "parses collection DomainModels" do
       define { field :children, :type => Child, :collection => true }
 
       client   = Client.from_primitive(:children => [{:field => "VALUE"}] )
@@ -445,7 +445,7 @@ describe Model do
 
   def define(&block)
     client = Class.new do
-      include Model
+      include DomainModel
       instance_eval(&block)
     end
     stub_const("Client", client)

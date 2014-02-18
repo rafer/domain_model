@@ -1,2 +1,2 @@
 require "bundler/setup"
-require "model"
+require "domain_model"

@@ -1,11 +1,11 @@
 # coding: utf-8
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'model/version'
+require 'domain_model/version'
 
 Gem::Specification.new do |spec|
-  spec.name          = "model"
-  spec.version       = Model::VERSION
+  spec.name          = "domain_model"
+  spec.version       = DomainModel::VERSION
   spec.authors       = ["Rafer Hazen"]
   spec.email         = ["rafer@ralua.com"]
   spec.summary       = %q{Minimal framework for definition of type-aware domain models}

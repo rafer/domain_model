@@ -1,4 +1,4 @@
-module Model
+module DomainModel
   def self.included(base)
     base.extend(ClassMethods)
   end
@@ -78,7 +78,7 @@ module Model
 
     def serialize(object)
       case object
-      when Model
+      when DomainModel
         serialize(object.attributes)
       when Hash
         object.each {|k,v| object[k] = serialize(v) }
@@ -97,7 +97,7 @@ module Model
 
     def deserialize(type, primitive)
       case
-      when type <= Model
+      when type <= DomainModel
         primitive.each do |k, v|
           field = type.fields.find { |f| f.name.to_s == k.to_s }
 
@@ -319,4 +319,4 @@ module Model
   end
 end
 
-require "model/version"
+require "domain_model/version"

@@ -1,4 +1,4 @@
-# Model
+# DomainModel
 
 TODO: Write a gem description
 
