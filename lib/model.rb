@@ -99,11 +99,9 @@ module Model
       case
       when type <= Model
         primitive.each do |k, v|
-          field = type.fields.find { |f| f.name == k } 
+          field = type.fields.find { |f| f.name.to_s == k.to_s } 
 
-          next unless field
-
-          next unless field.monotype
+          next unless field && field.monotype
 
           if field.collection?
             primitive[k] = v.map { |e| deserialize(field.monotype, e) }
