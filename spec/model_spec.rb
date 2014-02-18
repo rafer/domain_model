@@ -136,11 +136,36 @@ describe Model do
   end
 
   describe ".new" do
-    before { define { field :name } }
+    before do
+      define do
+        field :name
+        field :children, :collection => true
+      end
+    end
 
     it "accepts fields" do
       client = Client.new(:name => "Rafer")
       expect(client.name).to eq("Rafer")
+    end
+
+    it "accepts fields with string keys" do
+      client = Client.new("name" => "Rafer")
+      expect(client.name).to eq("Rafer")
+    end
+    
+    it "accepts collection fields" do
+      client = Client.new(:children => ["child"])
+      expect(client.children).to eq(["child"])
+    end
+
+    it "accepts collection fields with string keys" do
+      client = Client.new("children" => ["child"])
+      expect(client.children).to eq(["child"])
+    end
+
+    it "defaults collection fields to an empty array" do
+      client = Client.new
+      expect(client.children).to eq([])
     end
 
     it "raises an exception for unrecognized parmeters" do

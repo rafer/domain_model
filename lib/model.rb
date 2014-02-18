@@ -5,7 +5,7 @@ module Model
 
   def initialize(attributes={})
     self.class.fields.select(&:collection?).each do |field|
-      attributes[field.name] ||= []
+      send("#{field.name}=", [])
     end
 
     attributes.each { |k,v | send("#{k}=", v) }
@@ -89,17 +89,17 @@ module Model
       end
     end
   end
-  
+
   class Deserializer
     def self.deserialize(type, primitive)
       new.deserialize(type, primitive)
     end
-  
+
     def deserialize(type, primitive)
       case
       when type <= Model
         primitive.each do |k, v|
-          field = type.fields.find { |f| f.name.to_s == k.to_s } 
+          field = type.fields.find { |f| f.name.to_s == k.to_s }
 
           next unless field && field.monotype
 
@@ -111,7 +111,7 @@ module Model
         end
 
         type.new(primitive)
-      else 
+      else
         primitive
       end
     end
