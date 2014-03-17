@@ -98,13 +98,14 @@ module DomainModel
     def deserialize(type, primitive)
       case
       when type <= DomainModel
+        primitive ||= {}
         primitive.each do |k, v|
           field = type.fields.find { |f| f.name.to_s == k.to_s }
 
           next unless field && field.monotype
 
           if field.collection?
-            primitive[k] = v.map { |e| deserialize(field.monotype, e) }
+            primitive[k] = (v || []).map { |e| deserialize(field.monotype, e) }
           else
             primitive[k] = deserialize(field.monotype, v)
           end

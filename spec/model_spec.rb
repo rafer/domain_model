@@ -152,7 +152,7 @@ describe DomainModel do
       client = Client.new("name" => "Rafer")
       expect(client.name).to eq("Rafer")
     end
-    
+
     it "accepts collection fields" do
       client = Client.new(:children => ["child"])
       expect(client.children).to eq(["child"])
@@ -440,6 +440,16 @@ describe DomainModel do
       children = client.children
 
       expect(children).to eq([Child.new(:field => "VALUE")])
+    end
+
+    it "correctly deserializes a nil child" do
+      define { field :child, :type => Child }
+      expect { Client.from_primitive(:child => nil) }.not_to raise_error
+    end
+
+    it "correctly deserializes a nil child collection" do
+      define { field :children, :type => Child, :collection => true }
+      expect { Client.from_primitive(:children => nil) }.not_to raise_error
     end
   end
 

@@ -1,35 +1,17 @@
-# DomainModel
+# Sanctum
 
-TODO: Write a gem description
+Sanctum provides a minimal set of utilties for declaring object attributes with optional type and validation support.
 
-## Installation
+Features
 
-Add this line to your application's Gemfile:
+* Sanctum produces objects that look like totally normal ruby objects, not specialized "framework" objects (like descendents of ActiveRecord::Base or ActiveModel::Base)
+* Sanctum allows you to declare the type of
 
-    gem 'model'
+## Background
 
-And then execute:
 
-    $ bundle
+## Development
 
-Or install it yourself as:
+To run the tests (assuming you have already run `gem install bundler`):
 
-    $ gem install model
-
-## Tests
-
-Run the tests:
-
-    rake test
-
-## Usage
-
-TODO: Write usage instructions here
-
-## Contributing
-
-1. Fork it
-2. Create your feature branch (`git checkout -b my-new-feature`)
-3. Commit your changes (`git commit -am 'Add some feature'`)
-4. Push to the branch (`git push origin my-new-feature`)
-5. Create new Pull Request
+    bundle install && bundle exec rake
