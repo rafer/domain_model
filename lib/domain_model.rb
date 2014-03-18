@@ -129,7 +129,7 @@ module DomainModel
       @collection = options.fetch(:collection, false)
       @validate   = options.fetch(:validate, false)
 
-      raw_type = options.fetch(:type, BasicObject)
+      raw_type = options.fetch(:type, Object)
       @types   = raw_type.is_a?(Module) ? [raw_type] : raw_type
 
       if required? and collection?
