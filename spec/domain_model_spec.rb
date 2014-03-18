@@ -25,6 +25,17 @@ describe DomainModel do
 
       expect(&required_collection).to raise_error(ArgumentError, /fields cannot be both :collection and :required/ )
     end
+
+    it "inherits fields from superclasses" do
+      define { field :parent_field }
+
+      child_a = Class.new(Client) { field :child_a_field }
+      child_b = Class.new(Client) { field :child_b_field }
+
+      expect(Client.fields.map(&:name)).to eq([:parent_field])
+      expect(child_a.fields.map(&:name)).to eq([:parent_field, :child_a_field])
+      expect(child_b.fields.map(&:name)).to eq([:parent_field, :child_b_field])
+    end
   end
 
   describe ".validate" do

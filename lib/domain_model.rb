@@ -59,7 +59,9 @@ module DomainModel
     end
 
     def fields
-      @fields ||= []
+      @fields ||= begin
+        superclass.include?(DomainModel) ? (superclass.fields.dup) : []
+      end
     end
 
     def validations
