@@ -8,7 +8,7 @@ Gem::Specification.new do |spec|
   spec.version       = DomainModel::VERSION
   spec.authors       = ["Rafer Hazen"]
   spec.email         = ["rafer@ralua.com"]
-  spec.summary       = %q{Minimal framework for definition of type-aware domain models}
+  spec.summary       = %q{Minimal framework for definition of (optionally) type-aware domain models}
   spec.description   = spec.summary
   spec.homepage      = ""
   spec.license       = "MIT"
