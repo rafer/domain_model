@@ -23,6 +23,30 @@ module DomainModel
     errors
   end
 
+  def flat_errors
+    errors = ModelErrors.new
+
+    self.class.fields.each do |field|
+      value = self.send(field.name)
+
+      errors.add(field.name, field.errors(value))
+
+      if field.validate? && field.monotype < DomainModel
+        if field.collection?
+          value.each.with_index do |element, index|
+            element.flat_errors.each { |k, v| errors.add(:"#{field.name}[#{index}].#{k}", v) }
+          end
+        else
+          value.flat_errors.each { |k, v| errors.add(:"#{field.name}.#{k}", v) }
+        end
+      end
+    end
+
+    self.class.validations.each { |v| v.execute(self, errors) }
+
+    errors
+  end
+
   def valid?
     errors.empty?
   end
@@ -172,11 +196,14 @@ module DomainModel
 
     def [](field_name)
       @hash[field_name] || []
-
     end
 
     def empty?
       @hash.values.flatten.empty?
+    end
+
+    def each(&block)
+      @hash.each(&block)
     end
   end
 
