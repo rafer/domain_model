@@ -388,12 +388,27 @@ describe DomainModel do
       it "includes associated models errors for collection fields" do
         expect(subject.flat_errors[:"friends_names[0].first"]).to eq(["cannot be nil"])
       end
+
+      it "does not raise exceptions if a scalar field not a DomainModel" do
+        subject.name = "WRONG"
+        expect { subject.flat_errors }.not_to raise_error
+      end
+
+      it "does not raise expections if a colleciton field is non-enumerable" do
+        subject.friends_names = 5
+        expect { subject.flat_errors }.not_to raise_error
+      end
+
+
+      it "does not raise expetions if an element of a Collection is not a DomainModel" do
+        subject.friends_names = ["WRONG"]
+        expect { subject.flat_errors }.not_to raise_error
+      end
     end
 
     it "does not attempt to retrieve errors from associated non-DomainModels" do
       name_class = Class.new do
         # Not a DomainModel
-
         def valid?
           false
         end

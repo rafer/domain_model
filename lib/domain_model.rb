@@ -28,16 +28,20 @@ module DomainModel
 
     self.class.fields.each do |field|
       next unless field.validate?
-      next unless field.monotype < DomainModel
+      next unless field.monotype && field.monotype < DomainModel
 
       value = self.send(field.name)
 
-      if field.collection?
-        value.each_with_index do |element, index|
-          element.flat_errors.each { |k, v| errors.add(:"#{field.name}[#{index}].#{k}", v) }
-        end
-      else
+      if !field.collection? && value.is_a?(DomainModel)
         value.flat_errors.each { |k, v| errors.add(:"#{field.name}.#{k}", v) }
+      end
+
+      if field.collection? && value.is_a?(Enumerable)
+        value.each_with_index do |element, index|
+          if element.is_a?(DomainModel)
+            element.flat_errors.each { |k, v| errors.add(:"#{field.name}[#{index}].#{k}", v) }
+          end
+        end
       end
     end
 
