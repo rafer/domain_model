@@ -359,33 +359,54 @@ describe DomainModel do
   end
 
   describe ".flat_errors" do
-    subject do
-      name_class = Class.new do
-        include DomainModel
+    describe "associated DomainModels" do
+      subject do
+        name_class = Class.new do
+          include DomainModel
 
-        field :first, :required => true
-        field :last,  :required => true
+          field :first, :required => true
+          field :last,  :required => true
+        end
+
+        person_class = Class.new do
+          include DomainModel
+
+          field :name, :validate => true, :type => name_class
+          field :friends_names, :validate => true, :collection => true, :type => name_class
+        end
+
+        person_class.new({
+          :name => name_class.new,
+          :friends_names => [name_class.new]
+        })
+      end
+
+      it "includes associated models errors for scalar fields" do
+        expect(subject.flat_errors[:"name.first"]).to eq(["cannot be nil"])
+      end
+
+      it "includes associated models errors for collection fields" do
+        expect(subject.flat_errors[:"friends_names[0].first"]).to eq(["cannot be nil"])
+      end
+    end
+
+    it "does not attempt to retrieve errors from associated non-DomainModels" do
+      name_class = Class.new do
+        # Not a DomainModel
+
+        def valid?
+          false
+        end
       end
 
       person_class = Class.new do
         include DomainModel
 
         field :name, :validate => true, :type => name_class
-        field :friends_names, :validate => true, :collection => true, :type => name_class
       end
 
-      person_class.new({
-        :name => name_class.new,
-        :friends_names => [name_class.new]
-      })
-    end
-
-    it "includes associated models errors for scalar fields" do
-      expect(subject.flat_errors[:"name.first"]).to eq(["cannot be nil"])
-    end
-
-    it "includes associated models errors for collection fields" do
-      expect(subject.flat_errors[:"friends_names[0].first"]).to eq(["cannot be nil"])
+      person = person_class.new(:name => name_class.new)
+      expect(person.errors.fields).to eq([:name])
     end
   end
 

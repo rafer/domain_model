@@ -27,7 +27,8 @@ module DomainModel
     errors = self.errors
 
     self.class.fields.each do |field|
-      next unless field.validate? and field.monotype < DomainModel
+      next unless field.validate?
+      next unless field.monotype < DomainModel
 
       value = self.send(field.name)
 
