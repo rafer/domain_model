@@ -144,6 +144,17 @@ describe DomainModel do
         expect(client.errors[:field]).to eq(["cannot be nil"])
       end
     end
+
+    it "runs the parent validations in subclasses" do
+      define do
+        field :field
+        validate(:field) { |e| e.add("errors") }
+      end
+
+      child_client = Class.new(Client).new
+
+      expect(child_client.errors[:field]).to eq(["errors"])
+    end
   end
 
   describe ".new" do

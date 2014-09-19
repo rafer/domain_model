@@ -49,7 +49,6 @@ module DomainModel
 
   module ClassMethods
     def validate(*args, &block)
-      @validations ||= []
       validations << Validation.new(*args, &block)
     end
 
@@ -65,7 +64,9 @@ module DomainModel
     end
 
     def validations
-      @validations ||= []
+      @validations ||= begin
+        superclass.include?(DomainModel) ? (superclass.validations.dup) : []
+      end
     end
 
     def from_primitive(primitive)
@@ -140,6 +141,7 @@ module DomainModel
     def errors(value)
       Validator.errors(self, value)
     end
+
 
     def monotype
       types.first if types.count == 1
@@ -305,7 +307,7 @@ module DomainModel
 
       def type_mismatch?
         types.none? { |t| value.is_a?(t) }
-        end
+      end
 
       def type_string
         types.map(&:inspect).join(' or ')
