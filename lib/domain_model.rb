@@ -215,6 +215,10 @@ module DomainModel
     def fields
       @hash.keys
     end
+
+    def inspect
+      "#<DomainMode::ModelErrors #{@hash.inspect}>"
+    end
   end
 
   class FieldErrors
