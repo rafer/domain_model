@@ -24,27 +24,41 @@ module DomainModel
   end
 
   def flat_errors
-    errors = ModelErrors.new
+    errors = self.errors
 
     self.class.fields.each do |field|
+      next unless field.validate? and field.monotype < DomainModel
+
       value = self.send(field.name)
 
-      errors.add(field.name, field.errors(value))
-
-      if field.validate? && field.monotype < DomainModel
-        if field.collection?
-          value.each.with_index do |element, index|
-            element.flat_errors.each { |k, v| errors.add(:"#{field.name}[#{index}].#{k}", v) }
-          end
-        else
-          value.flat_errors.each { |k, v| errors.add(:"#{field.name}.#{k}", v) }
+      if field.collection?
+        value.each_with_index do |element, index|
+          element.flat_errors.each { |k, v| errors.add(:"#{field.name}[#{index}].#{k}", v) }
         end
+      else
+        value.flat_errors.each { |k, v| errors.add(:"#{field.name}.#{k}", v) }
       end
     end
 
-    self.class.validations.each { |v| v.execute(self, errors) }
-
     errors
+
+    # self.class.fields.each do |field|
+    #   value = self.send(field.name)
+
+    #   errors.add(field.name, field.errors(value))
+
+    #   if field.validate? && field.monotype < DomainModel
+    #     if field.collection?
+    #       value.each.with_index do |element, index|
+    #         element.flat_errors.each { |k, v| errors.add(:"#{field.name}[#{index}].#{k}", v) }
+    #       end
+    #     else
+    #       value.flat_errors.each { |k, v| errors.add(:"#{field.name}.#{k}", v) }
+    #     end
+    #   end
+    # end
+
+    # self.class.validations.each { |v| v.execute(self, errors) }
   end
 
   def valid?
