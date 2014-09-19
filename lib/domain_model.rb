@@ -28,7 +28,6 @@ module DomainModel
 
     self.class.fields.each do |field|
       next unless field.validate?
-      next unless field.monotype && field.monotype < DomainModel
 
       value = self.send(field.name)
 
