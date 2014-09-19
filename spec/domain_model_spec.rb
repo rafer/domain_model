@@ -201,6 +201,13 @@ describe DomainModel do
       expect(Client.new.errors).to be_empty
     end
 
+    it "does not include fields with non errors" do
+      define { field :field }
+      client = Client.new(:field => :wrong)
+
+      expect(client.errors.fields).to eq([])
+    end
+
     it "includes errors for incorrect types" do
       define { field :field, :type => String }
       client = Client.new(:field => :wrong)
