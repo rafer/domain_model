@@ -186,6 +186,8 @@ module DomainModel
   end
 
   class ModelErrors
+    include Enumerable
+
     def initialize
       @hash = Hash.new
     end

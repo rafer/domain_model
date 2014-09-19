@@ -201,11 +201,19 @@ describe DomainModel do
       expect(Client.new.errors).to be_empty
     end
 
-    it "does not include fields with non errors" do
+    it "does not include fields with no errors" do
       define { field :field }
       client = Client.new(:field => :wrong)
 
       expect(client.errors.fields).to eq([])
+    end
+
+    it "is enumerable" do
+      define { field :field, :required => true }
+      client = Client.new
+
+      expect(client.errors.is_a?(Enumerable)).to eq(true)
+      expect(client.errors.entries).to eq([[:field, ["cannot be nil"]]])
     end
 
     it "includes errors for incorrect types" do
