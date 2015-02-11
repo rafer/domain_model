@@ -215,6 +215,10 @@ module DomainModel
     def fields
       @hash.keys
     end
+
+    def as_json(*)
+      @hash.clone
+    end
   end
 
   class FieldErrors

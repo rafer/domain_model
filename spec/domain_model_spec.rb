@@ -38,6 +38,20 @@ describe DomainModel do
     end
   end
 
+  describe "#errors" do
+    before { define { field :name, :required => true } }
+
+    it "has a resonable implementation of #as_json" do
+      errors = Client.new.errors
+      expect(errors.as_json).to eq({:name => ["cannot be nil"]})
+    end
+
+    it "has #as_json that is tolerant of parameters" do
+      expect { Client.new.errors.as_json("arbitrary", "params") }.not_to raise_error
+    end
+
+  end
+
   describe ".validate" do
     it "runs added validations each time #errors is called" do
       run_count = 0
@@ -366,7 +380,7 @@ describe DomainModel do
     end
   end
 
-  describe ".flat_errors" do
+  describe "#flat_errors" do
     describe "associated DomainModels" do
       subject do
         name_class = Class.new do
