@@ -490,6 +490,23 @@ describe DomainModel do
     end
   end
 
+  describe "#valid!" do
+    it "raises an DomainModel::InvalidModel exception if there are errors" do
+      define { field :field, :required => true }
+      expect { Client.new.valid! }.to raise_error(DomainModel::InvalidModel)
+    end
+
+    it "includes a description of the errors as the error" do
+      define { field :field, :required => true }
+      expect { Client.new.valid! }.to raise_error('This Client object contains the following errors: {:field=>["cannot be nil"]}')
+    end
+
+    it "does not raise an excpetion if there are no errors" do
+      define { field :field }
+      expect { Client.new.valid! }.not_to raise_error
+    end
+  end
+
   describe "#attributes" do
     it "returns the models as a hash" do
       define { field :field }

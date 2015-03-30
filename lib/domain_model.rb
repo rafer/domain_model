@@ -1,4 +1,6 @@
 module DomainModel
+  InvalidModel = Class.new(StandardError)
+
   def self.included(base)
     base.extend(ClassMethods)
   end
@@ -49,6 +51,14 @@ module DomainModel
 
   def valid?
     errors.empty?
+  end
+
+  def valid!
+    cached_errors = errors # Just in case #errors is non-deterministic
+
+    if !cached_errors.empty?
+      raise InvalidModel.new("This #{self.class} object contains the following errors: #{cached_errors.to_hash}")
+    end
   end
 
   def ==(other)
@@ -217,6 +227,10 @@ module DomainModel
     end
 
     def as_json(*)
+      @hash.clone
+    end
+
+    def to_hash
       @hash.clone
     end
   end
