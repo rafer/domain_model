@@ -65,8 +65,16 @@ module DomainModel
     other.is_a?(self.class) && attributes == other.attributes
   end
 
+  def to_s
+    inspect
+  end
+
   def inspect
     "#<#{self.class} " + attributes.map { |n, v| "#{n}: #{v.inspect}" }.join(", ") + ">"
+  end
+
+  def empty?
+    self.class.fields.all? { |f| send(f.name).nil? }
   end
 
   def attributes
@@ -175,7 +183,6 @@ module DomainModel
     def errors(value)
       Validator.errors(self, value)
     end
-
 
     def monotype
       types.first if types.count == 1

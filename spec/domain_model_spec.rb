@@ -469,12 +469,36 @@ describe DomainModel do
     end
   end
 
+
+  describe "#to_s" do
+    before { define { field :field } }
+
+    it "shows the name and value of all fields" do
+      client = Client.new(:field => "VALUE")
+      expect(client.to_s).to match(/field: "VALUE"/)
+    end
+  end
+
   describe "#inspect" do
     before { define { field :field } }
 
     it "shows the name and value of all fields" do
       client = Client.new(:field => "VALUE")
       expect(client.inspect).to match(/field: "VALUE"/)
+    end
+  end
+
+  describe "#empty?" do
+    before { define { field :field } }
+
+    it "is true if all fields are nil" do
+      client = Client.new(:field => nil)
+      expect(client.empty?).to eq(true)
+    end
+
+    it "is false if any fields are set" do
+      client = Client.new(:field => "SET")
+      expect(client.empty?).to eq(false)
     end
   end
 
